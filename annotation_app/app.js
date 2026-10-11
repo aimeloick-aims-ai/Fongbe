@@ -46,14 +46,14 @@ function readSyllables(){return [...document.querySelectorAll(".syllable-row")].
 function wordTokens(text){const out=[];const re=/\S+/gu;let m;while((m=re.exec(text)))out.push({text:m[0],start_char:m.index,end_char:m.index+m[0].length});return out;}
 function median(values){const sorted=[...values].sort((a,b)=>a-b);if(!sorted.length)return NaN;const middle=Math.floor(sorted.length/2);return sorted.length%2?sorted[middle]:(sorted[middle-1]+sorted[middle])/2;}
 function proposeContour(item,unit){
-  const track=f0ById[item?.utterance_id];if(!track)return {label:"UNKNOWN",confidence:"low",voiced_frames:0,reason:"missing_f0"};
+  const track=f0ById[item?.utterance_id];if(!track)return {label:"UNKNOWN",confidence:"faible",voiced_frames:0,reason:"missing_f0"};
   const times=track.time_s||[],f0=track.f0_hz||[],valid=[];
   for(let i=0;i<Math.min(times.length,f0.length);i++){const time=Number(times[i]),hz=Number(f0[i]);if(Number.isFinite(time)&&Number.isFinite(hz)&&hz>0)valid.push({time,hz});}
   const baseline=median(valid.map(point=>point.hz));
   const start=Number(unit.start_s),end=Number(unit.end_s);
-  if(!Number.isFinite(baseline)||!Number.isFinite(start)||!Number.isFinite(end)||end<=start)return {label:"UNKNOWN",confidence:"low",voiced_frames:0,reason:"invalid_interval_or_f0"};
+  if(!Number.isFinite(baseline)||!Number.isFinite(start)||!Number.isFinite(end)||end<=start)return {label:"UNKNOWN",confidence:"faible",voiced_frames:0,reason:"invalid_interval_or_f0"};
   const segment=valid.filter(point=>point.time>=start&&point.time<=end).map(point=>({time:point.time,st:12*Math.log2(point.hz/baseline)}));
-  if(segment.length<4)return {label:"UNKNOWN",confidence:"low",voiced_frames:segment.length,reason:"too_few_voiced_frames"};
+  if(segment.length<4)return {label:"UNKNOWN",confidence:"faible",voiced_frames:segment.length,reason:"too_few_voiced_frames"};
   const third=Math.max(1,Math.floor(segment.length/3)),first=segment.slice(0,third).map(point=>point.st),last=segment.slice(-third).map(point=>point.st);
   const relativeMedian=median(segment.map(point=>point.st)),delta=median(last)-median(first),threshold=CONTOUR_THRESHOLD_SEMITONES;
   let label="M";
@@ -66,7 +66,7 @@ function proposeContour(item,unit){
 }
 function updateContourSuggestions(){
   const item=examples[current];if(!item)return;
-  document.querySelectorAll(".syllable-row").forEach(row=>{const unit={start_s:row.querySelector('[data-f="start"]').value,end_s:row.querySelector('[data-f="end"]').value};const candidate=proposeContour(item,unit),target=row.querySelector(".tone-suggestion");if(target){target.textContent=`F0 : ${candidate.label} · confiance ${candidate.confidence} · ${candidate.voiced_frames} trames`;target.dataset.candidate=candidate.label;target.dataset.confidence=candidate.confidence;target.dataset.frames=String(candidate.voiced_frames);}});
+  document.querySelectorAll(".syllable-row").forEach(row=>{const unit={start_s:row.querySelector('[data-f="start"]').value,end_s:row.querySelector('[data-f="end"]').value};const candidate=proposeContour(item,unit),target=row.querySelector(".tone-suggestion");if(target){target.textContent=candidate.label==="UNKNOWN"?`Suggestion F0 : Indéterminée · ${candidate.voiced_frames} trame(s) voisée(s) seulement`:`Suggestion F0 : ${candidate.label} · confiance ${candidate.confidence} · ${candidate.voiced_frames} trames`;target.dataset.candidate=candidate.label;target.dataset.confidence=candidate.confidence;target.dataset.frames=String(candidate.voiced_frames);}});
 }
 function renderWords(item,saved){
   const words=saved.words?.length?saved.words:wordTokens(item.text_original).map(w=>({...w,translation_fr:""}));
