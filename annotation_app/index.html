@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f2ed">
+  <title>Fongbe — atelier d’annotation</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Atelier Fongbe, accueil"><span class="brand-mark">F</span><span>Atelier Fongbe</span></a>
+    <div class="top-actions"><span class="local-pill"><i></i> Brouillons enregistrés sur cet appareil</span><a href="README.md">Comment participer ↗</a></div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <div class="eyebrow">PROJET DE RECHERCHE · FONGBE → FRANÇAIS</div>
+      <h1>Écouter. Annoter.<br><em>Traduire avec précision.</em></h1>
+      <p>Pour chaque extrait, proposez une traduction française de la phrase, puis le sens de chaque mot. Vous pouvez aussi valider les syllabes, les tons et leurs limites dans l’audio.</p>
+      <div class="intro-meta"><span id="example-count">Chargement des exemples…</span><span class="dot">·</span><span>Variété ciblée : Abomey</span><span class="dot">·</span><span>Les réponses restent indépendantes</span></div>
+    </section>
+
+    <section class="workbench" aria-label="Espace d’annotation">
+      <aside class="sidebar">
+        <div class="reviewer-box">
+          <label for="annotator">Votre code annotateur</label>
+          <input id="annotator" maxlength="40" placeholder="ex. annotateur_A" autocomplete="off">
+          <small>Un même code pour retrouver votre travail sur cet appareil.</small>
+        </div>
+        <div class="side-title"><span>EXTRAITS</span><span id="progress-label">0 / 0</span></div>
+        <div class="progress-track"><div id="progress-bar"></div></div>
+        <nav id="example-nav" aria-label="Liste des extraits"></nav>
+        <div class="side-tools">
+          <label class="button secondary import-button">＋ Charger un CSV d’exemples<input id="import-examples" type="file" accept=".csv,text/csv" hidden></label>
+          <button id="export-all" class="button primary" type="button">Télécharger mes annotations</button>
+          <label class="button text-button import-button">Reprendre mes annotations CSV<input id="import-annotations" type="file" accept=".csv,text/csv" hidden></label>
+          <p>Le site public ne rassemble pas les réponses automatiquement. Téléchargez votre CSV et transmettez-le au responsable du projet.</p>
+        </div>
+      </aside>
+
+      <section class="annotation-panel">
+        <div id="empty-state" class="empty-state" hidden>
+          <div class="empty-icon">♫</div><h2>Aucun exemple chargé</h2><p>Choisissez un CSV qui contient au minimum <code>utterance_id</code>, <code>text_original</code> et <code>audio_url</code>.</p>
+        </div>
+        <div id="annotation-content" hidden>
+          <div class="item-heading">
+            <div><div class="eyebrow" id="item-kicker">EXTRAIT 1</div><h2 id="item-title">Écoutez cet extrait</h2></div>
+            <div class="item-nav"><button id="previous-item" aria-label="Extrait précédent">←</button><button id="next-item" aria-label="Extrait suivant">→</button></div>
+          </div>
+          <div class="player-card">
+            <div class="player-heading"><span>ÉCOUTE DE L’EXTRAIT</span><span id="duration-label"></span></div>
+            <audio id="audio-player" controls preload="metadata"></audio>
+            <label class="audio-upload">Charger l’audio depuis votre ordinateur<input id="local-audio" type="file" accept="audio/*" hidden></label>
+            <div class="player-tip">Écoutez la phrase entière. Cliquez sur une syllabe pour écouter autour de ses limites. Ralentissez à 0,75× si nécessaire.</div>
+          </div>
+
+          <section class="translation-section">
+            <div class="section-heading"><div><span class="step">01</span><div><h3>Traduction de la phrase</h3><p>Écrivez le sens naturel de toute la phrase en français.</p></div></div><span class="optional-tag">PHRASE</span></div>
+            <textarea id="sentence-translation" rows="2" placeholder="Traduction française de toute la phrase…"></textarea>
+          </section>
+
+          <section class="translation-section word-section">
+            <div class="section-heading"><div><span class="step">02</span><div><h3>Traduction mot par mot</h3><p>Un sens ou une explication française pour chaque mot.</p></div></div><button id="add-word" class="small-action" type="button">＋ Ajouter un mot</button></div>
+            <div id="word-list" class="word-list"></div>
+          </section>
+
+          <section class="translation-section syllable-section">
+            <div class="section-heading"><div><span class="step">03</span><div><h3>Syllabes, tons et limites</h3><p>Les propositions sont des aides automatiques : écoutez et corrigez si besoin.</p></div></div><span class="optional-tag">AUDIO</span></div>
+            <div class="tone-legend"><span><b>Tonalité lexicale</b> : ton associé au mot dans la langue</span><span><b>Contour entendu</b> : mouvement de la voix dans cet extrait</span></div>
+            <div id="syllable-list" class="table-wrap"></div>
+            <button id="add-syllable" class="small-action add-syllable" type="button">＋ Ajouter une syllabe</button>
+          </section>
+
+          <div class="save-row"><span id="save-status">Modifications enregistrées automatiquement.</span><button id="export-current" class="button primary" type="button">Exporter cet extrait ↓</button></div>
+          <details class="source-details"><summary>Provenance de l’extrait</summary><p id="source-note"></p></details>
+        </div>
+      </section>
+    </section>
+    <footer>Projet de recherche sur le ton en Fongbe · Les annotations ne sont pas des vérités de référence tant qu’elles ne sont pas relues et rapprochées.</footer>
+  </main>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
