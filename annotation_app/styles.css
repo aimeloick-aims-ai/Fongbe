@@ -6,3 +6,5 @@
 
 #export-all{text-decoration:none}#export-all[aria-disabled="true"]{opacity:.5;pointer-events:none}
 
+.tone-control{display:grid;gap:4px}.tone-note{max-width:100px}
+
