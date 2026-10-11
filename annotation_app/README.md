@@ -16,3 +16,5 @@ python -m http.server 8000
 
 Puis ouvrez `http://localhost:8000/annotation_app/`.
 
+The public eight-example page now proposes a heard-contour label for each existing syllable interval. It converts voiced F0 to semitones relative to that utterance's median, uses fixed 1.5-semitone thresholds for level and rising/falling patterns, and returns UNKNOWN when fewer than four voiced frames are available. These are low/medium-confidence suggestions only. They appear separately from the annotator's final selection and are exported as `contour_candidate`; `contour_review_status` stays pending until the reviewer chooses a value. This is utterance-relative normalization, not validated speaker normalization or an approved tone classifier.
+
