@@ -51,8 +51,7 @@
           <div class="player-card">
             <div class="player-heading"><span>ÉCOUTE DE L’EXTRAIT</span><span id="duration-label"></span></div>
             <audio id="audio-player" controls preload="metadata"></audio>
-            <label class="audio-upload">Charger l’audio depuis votre ordinateur<input id="local-audio" type="file" accept="audio/*" hidden></label>
-            <div class="player-tip">Écoutez la phrase entière. Cliquez sur une syllabe pour écouter autour de ses limites. Ralentissez à 0,75× si nécessaire.</div>
+            <div class="player-tip">L’audio de cet extrait est disponible ici. Cliquez sur une syllabe pour l’écouter à 0,75×, depuis 0,15 s avant le début jusqu’à sa limite de fin.</div>
           </div>
 
           <section class="translation-section">
@@ -68,6 +67,11 @@
           <section class="translation-section syllable-section">
             <div class="section-heading"><div><span class="step">03</span><div><h3>Syllabes, tons et limites</h3><p>Les propositions sont des aides automatiques : écoutez et corrigez si besoin.</p></div></div><span class="optional-tag">AUDIO</span></div>
             <div class="tone-legend"><span><b>Tonalité lexicale</b> : ton associé au mot dans la langue</span><span><b>Contour entendu</b> : mouvement de la voix dans cet extrait</span></div>
+            <div class="f0-card">
+              <div class="f0-heading"><div><b>Fréquence fondamentale (F0)</b><span id="f0-status">Chargement de la courbe…</span></div><span>Hz · secondes</span></div>
+              <canvas id="f0-chart" role="img" aria-label="Courbe de fréquence fondamentale et limites des syllabes"></canvas>
+              <div class="f0-help">Courbe Praat des variations de hauteur. Les temps préremplis sont des suggestions automatiques à vérifier ou des limites déjà saisies. Modifiez-les ci-dessous ; cliquez sur une zone pour écouter cette syllabe.</div>
+            </div>
             <div id="syllable-list" class="table-wrap"></div>
             <button id="add-syllable" class="small-action add-syllable" type="button">＋ Ajouter une syllabe</button>
           </section>
