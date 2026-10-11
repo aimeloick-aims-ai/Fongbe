@@ -106,7 +106,7 @@ async function loadInitial(){
   const items=splitCsv(await a.text()),units=splitCsv(await b.text());f0ById=await c.json();const byId=new Map();
   for(const u of units){const id=u.utterance_id;if(!byId.has(id))byId.set(id,[]);byId.get(id).push({unit_text:u.syllable_text,start_char:Number(u.start_char),end_char:Number(u.end_char),start_s:Number(u.start_s),end_s:Number(u.end_s),boundary_source:u.boundary_source,lexical_tone_candidate:u.lexical_tone_candidate,contour_candidate:u.contour_candidate});}
   examples=items.map(x=>({...x,audio_url:new URL(x.audio_url,APP_BASE_URL).href,duration_s:Number(x.duration_s)||0,units:byId.get(x.utterance_id)||[]}));
-  el("dataset-status").textContent="8 extraits et leurs courbes F0 sont stock\u00e9s avec le site ; aucune connexion \u00e0 Hugging Face n\u2019est n\u00e9cessaire.";
+  el("dataset-status").textContent="Les 8 extraits, leurs audios locaux et leurs courbes F0 sont charg\u00e9s.";
   render();
 }
 el("annotator").value=localStorage.getItem("fongbe-annotator-id")||"";el("annotator").addEventListener("input",()=>{localStorage.setItem("fongbe-annotator-id",el("annotator").value);render();refreshCsvDownload();});
