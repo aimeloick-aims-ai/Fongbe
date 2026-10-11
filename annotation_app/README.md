@@ -1,18 +1,16 @@
 # Atelier d annotation Fongbe
 
-Application statique GitHub Pages. Au demarrage, elle charge les extraits audio et transcriptions par lots de 100 depuis le jeu public `Professor/fongbe-speech-zenodo` sur Hugging Face. Les extraits suivants sont charges au fur et a mesure de la navigation. Les fichiers audio sont lus depuis Hugging Face ; les visiteurs n ont pas a selectionner ni televerser les audios.
+La page contient un lot fixe de 8 extraits audio locaux, leurs transcriptions, les syllabes proposees et les courbes F0. Elle ne depend pas de Hugging Face pour afficher ou ecouter les exemples.
 
-## Contributions individuelles
+Chaque navigateur enregistre le travail dans son stockage local, associe au code annotateur. Le lien **Telecharger mon CSV** produit le fichier personnel contenant les traductions, les tons et les limites corrigees. Telechargez ce CSV pour le transmettre a l equipe ; GitHub Pages ne peut pas agreger les contributions sur un serveur.
 
-Chaque navigateur enregistre automatiquement le travail dans son stockage local, associe au code annotateur. Le lien **Telecharger mon CSV** suit les modifications et produit un fichier CSV personnel avec les phrases, mots, traductions, syllabes et valeurs saisies. Chaque annotateur remet son fichier a l equipe a la fin. Une page GitHub statique ne peut pas fusionner les CSV ni enregistrer les contributions sur le serveur ; il faut un backend si l equipe veut une feuille centrale mise a jour en temps reel.
+Les limites de lecture suivent exactement les temps affiches pour chaque syllabe. La lecture est ralentie a 0,75x sans ajouter de temps avant ou apres la syllabe. Les choix de ton affiches sont H, L, LH et ? incertain ? ; laissez le champ vide si vous ne souhaitez pas proposer de reponse.
 
-Les liens audio du visualiseur Hugging Face sont temporaires. En cas d expiration, la page demande un nouveau lien. Le CSV garde la provenance et le numero de ligne, pas le lien audio temporaire. Les audio remote sont dependants d Internet. Les courbes F0 locales ne couvrent que le lot de demonstration; les nouveaux extraits du corpus n ont pas encore de courbes ni de limites syllabiques pre-remplies.
-
-Pour lancer une copie locale, depuis la racine du projet :
+Pour lancer une copie locale depuis la racine du projet :
 
 ```powershell
 python -m http.server 8000
 ```
 
-Puis ouvrir `http://localhost:8000/annotation_app/`.
+Puis ouvrez `http://localhost:8000/annotation_app/`.
 
