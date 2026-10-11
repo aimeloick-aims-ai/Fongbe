@@ -1,5 +1,6 @@
 const LEXICAL_TONES = ["", "H", "L", "LH", "UNKNOWN", "OTHER"];
 const CONTOUR_TONES = ["", "H", "L", "M", "LH", "HL", "UNKNOWN", "OTHER"];
+const CONTOUR_THRESHOLD_SEMITONES = 1.5;
 const APP_BASE_URL = new URL(".", document.currentScript.src);
 const fields = ["utterance_id", "text_original", "audio_url", "duration_s"];
 let examples = [], current = 0, toastTimer, f0ById = {}, activeSyllable = -1, activeAudioStop = null;
@@ -43,6 +44,30 @@ function saveState(){const s=state(),item=examples[current];s.annotator_id=slug(
 function readWords(){return [...document.querySelectorAll(".word-card")].map(card=>({text:card.querySelector(".word-text").value,start_char:Number(card.dataset.start),end_char:Number(card.dataset.end),translation_fr:card.querySelector(".word-translation").value}));}
 function readSyllables(){return [...document.querySelectorAll(".syllable-row")].map(row=>({unit_text:row.querySelector("[data-f=text]").value,start_char:Number(row.dataset.startChar),end_char:Number(row.dataset.endChar),start_s:row.querySelector("[data-f=start]").value,end_s:row.querySelector("[data-f=end]").value,lexical_tone_final:row.querySelector("[data-f=lexical]").value,contour_heard:row.querySelector("[data-f=contour]").value,lexical_tone_note:row.querySelector("[data-f=lexical-note]")?.value||"",contour_note:row.querySelector("[data-f=contour-note]")?.value||"",confidence:row.querySelector("[data-f=confidence]").value}));}
 function wordTokens(text){const out=[];const re=/\S+/gu;let m;while((m=re.exec(text)))out.push({text:m[0],start_char:m.index,end_char:m.index+m[0].length});return out;}
+function median(values){const sorted=[...values].sort((a,b)=>a-b);if(!sorted.length)return NaN;const middle=Math.floor(sorted.length/2);return sorted.length%2?sorted[middle]:(sorted[middle-1]+sorted[middle])/2;}
+function proposeContour(item,unit){
+  const track=f0ById[item?.utterance_id];if(!track)return {label:"UNKNOWN",confidence:"low",voiced_frames:0,reason:"missing_f0"};
+  const times=track.time_s||[],f0=track.f0_hz||[],valid=[];
+  for(let i=0;i<Math.min(times.length,f0.length);i++){const time=Number(times[i]),hz=Number(f0[i]);if(Number.isFinite(time)&&Number.isFinite(hz)&&hz>0)valid.push({time,hz});}
+  const baseline=median(valid.map(point=>point.hz));
+  const start=Number(unit.start_s),end=Number(unit.end_s);
+  if(!Number.isFinite(baseline)||!Number.isFinite(start)||!Number.isFinite(end)||end<=start)return {label:"UNKNOWN",confidence:"low",voiced_frames:0,reason:"invalid_interval_or_f0"};
+  const segment=valid.filter(point=>point.time>=start&&point.time<=end).map(point=>({time:point.time,st:12*Math.log2(point.hz/baseline)}));
+  if(segment.length<4)return {label:"UNKNOWN",confidence:"low",voiced_frames:segment.length,reason:"too_few_voiced_frames"};
+  const third=Math.max(1,Math.floor(segment.length/3)),first=segment.slice(0,third).map(point=>point.st),last=segment.slice(-third).map(point=>point.st);
+  const relativeMedian=median(segment.map(point=>point.st)),delta=median(last)-median(first),threshold=CONTOUR_THRESHOLD_SEMITONES;
+  let label="M";
+  if(delta>=threshold)label="LH";
+  else if(delta<=-threshold)label="HL";
+  else if(relativeMedian>=threshold)label="H";
+  else if(relativeMedian<=-threshold)label="L";
+  const confidence=segment.length>=8&&(Math.abs(delta)>=2.5||Math.abs(relativeMedian)>=2)?"moyenne":"faible";
+  return {label,confidence,voiced_frames:segment.length,relative_median_semitones:Number(relativeMedian.toFixed(2)),start_to_end_semitones:Number(delta.toFixed(2)),reason:"f0_log_semitones_relative_to_utterance_median"};
+}
+function updateContourSuggestions(){
+  const item=examples[current];if(!item)return;
+  document.querySelectorAll(".syllable-row").forEach(row=>{const unit={start_s:row.querySelector('[data-f="start"]').value,end_s:row.querySelector('[data-f="end"]').value};const candidate=proposeContour(item,unit),target=row.querySelector(".tone-suggestion");if(target){target.textContent=`F0 : ${candidate.label} · confiance ${candidate.confidence} · ${candidate.voiced_frames} trames`;target.dataset.candidate=candidate.label;target.dataset.confidence=candidate.confidence;target.dataset.frames=String(candidate.voiced_frames);}});
+}
 function renderWords(item,saved){
   const words=saved.words?.length?saved.words:wordTokens(item.text_original).map(w=>({...w,translation_fr:""}));
   el("word-list").innerHTML=words.map((w,i)=>`<label class="word-card" data-text="${esc(w.text)}" data-start="${w.start_char}" data-end="${w.end_char}"><span class="word-source">MOT ${String(i+1).padStart(2,"0")} · FONGBE</span><input class="word-text" aria-label="Mot Fongbe" value="${esc(w.text)}" placeholder="mot Fongbe"><input class="word-translation" aria-label="Traduction française" value="${esc(w.translation_fr)}" placeholder="sens en français…"></label>`).join("");
@@ -51,8 +76,9 @@ function renderWords(item,saved){
 function renderSyllables(item,saved){
   const rows=saved.syllables?.length?saved.syllables:(item.units||[]).map(u=>({...u,lexical_tone_final:"",contour_heard:"",confidence:""}));
   const options=(values,value)=>values.map(t=>`<option value="${t}" ${value===t?"selected":""}>${({UNKNOWN:"Incertain",OTHER:"Autre",M:"M (moyen)",LH:"LH (montant)",HL:"HL (descendant)"})[t]||t||"Choisir"}</option>`).join("");
-  el("syllable-list").innerHTML=`<table class="syllable-table"><thead><tr><th>SYLLABE</th><th>DÉBUT (s)</th><th>FIN (s)</th><th>TON LEXICAL</th><th>TON ENTENDU</th><th>CONFIANCE</th><th>ÉCOUTER</th></tr></thead><tbody>${rows.map((u,i)=>`<tr class="syllable-row" data-text="${esc(u.unit_text)}" data-start-char="${u.start_char??-1}" data-end-char="${u.end_char??-1}"><td><input class="syl-time syl-word" data-f="text" value="${esc(u.unit_text)}" aria-label="Texte de la syllabe"></td><td><input class="syl-time" data-f="start" type="number" step="0.01" min="0" max="${item.duration_s||999}" value="${esc(u.start_s)}" aria-label="Début en secondes"></td><td><input class="syl-time" data-f="end" type="number" step="0.01" min="0" max="${item.duration_s||999}" value="${esc(u.end_s)}" aria-label="Fin en secondes"></td><td><div class="tone-control"><select class="syl-select" data-f="lexical" data-tone="lexical" aria-label="Ton lexical">${options(LEXICAL_TONES,u.lexical_tone_final)}</select><input class="syl-time tone-note" data-f="lexical-note" value="${esc(u.lexical_tone_note)}" placeholder="Pr\u00e9cisez" aria-label="Pr\u00e9cisez le ton lexical" ${u.lexical_tone_final==="OTHER"?"":"hidden"}></div></td><td><div class="tone-control"><select class="syl-select" data-f="contour" data-tone="contour" aria-label="Ton entendu">${options(CONTOUR_TONES,u.contour_heard)}</select><input class="syl-time tone-note" data-f="contour-note" value="${esc(u.contour_note)}" placeholder="Pr\u00e9cisez" aria-label="Pr\u00e9cisez le ton entendu" ${u.contour_heard==="OTHER"?"":"hidden"}></div></td><td><select class="syl-select" data-f="confidence"><option value="">—</option>${["faible","moyenne","forte"].map(x=>`<option ${u.confidence===x?"selected":""}>${x}</option>`).join("")}</select></td><td><button class="play-syl" type="button" title="Écouter exactement cette syllabe" data-play="${i}">▶</button></td></tr>`).join("")}</tbody></table>`;
-  el("syllable-list").querySelectorAll("input,select").forEach(control=>control.addEventListener("input",()=>{saveState();drawF0();}));
+  el("syllable-list").innerHTML=`<table class="syllable-table"><thead><tr><th>SYLLABE</th><th>DÉBUT (s)</th><th>FIN (s)</th><th>TON LEXICAL</th><th>TON ENTENDU</th><th>CONFIANCE</th><th>ÉCOUTER</th></tr></thead><tbody>${rows.map((u,i)=>`<tr class="syllable-row" data-text="${esc(u.unit_text)}" data-start-char="${u.start_char??-1}" data-end-char="${u.end_char??-1}"><td><input class="syl-time syl-word" data-f="text" value="${esc(u.unit_text)}" aria-label="Texte de la syllabe"></td><td><input class="syl-time" data-f="start" type="number" step="0.01" min="0" max="${item.duration_s||999}" value="${esc(u.start_s)}" aria-label="Début en secondes"></td><td><input class="syl-time" data-f="end" type="number" step="0.01" min="0" max="${item.duration_s||999}" value="${esc(u.end_s)}" aria-label="Fin en secondes"></td><td><div class="tone-control"><select class="syl-select" data-f="lexical" data-tone="lexical" aria-label="Ton lexical">${options(LEXICAL_TONES,u.lexical_tone_final)}</select><input class="syl-time tone-note" data-f="lexical-note" value="${esc(u.lexical_tone_note)}" placeholder="Pr\u00e9cisez" aria-label="Pr\u00e9cisez le ton lexical" ${u.lexical_tone_final==="OTHER"?"":"hidden"}></div></td><td><div class="tone-control"><select class="syl-select" data-f="contour" data-tone="contour" aria-label="Ton entendu">${options(CONTOUR_TONES,u.contour_heard)}</select><small class="tone-suggestion"></small><input class="syl-time tone-note" data-f="contour-note" value="${esc(u.contour_note)}" placeholder="Pr\u00e9cisez" aria-label="Pr\u00e9cisez le ton entendu" ${u.contour_heard==="OTHER"?"":"hidden"}></div></td><td><select class="syl-select" data-f="confidence"><option value="">—</option>${["faible","moyenne","forte"].map(x=>`<option ${u.confidence===x?"selected":""}>${x}</option>`).join("")}</select></td><td><button class="play-syl" type="button" title="Écouter exactement cette syllabe" data-play="${i}">▶</button></td></tr>`).join("")}</tbody></table>`;
+  updateContourSuggestions();
+  el("syllable-list").querySelectorAll("input,select").forEach(control=>control.addEventListener("input",()=>{saveState();drawF0();updateContourSuggestions();}));
   el("syllable-list").querySelectorAll("[data-tone]").forEach(select=>select.addEventListener("change",()=>{const note=select.parentElement.querySelector(".tone-note");note.hidden=select.value!=="OTHER";if(note.hidden)note.value="";saveState();}));
   el("syllable-list").querySelectorAll("[data-play]").forEach(button=>button.addEventListener("click",()=>playUnit(Number(button.dataset.play))));
 }
@@ -92,10 +118,10 @@ function buildExportRows(){
     const item=examples.find(x=>x.utterance_id===id)||{};
     const text=s.text_original||item.text_original||"";
     const hasWork=Boolean(s.sentence_translation||s.words?.some(w=>w.translation_fr)||s.syllables?.some(u=>u.lexical_tone_final||u.contour_heard||u.start_s!==""||u.end_s!==""));if(!hasWork)continue;
-    const common={utterance_id:id,annotator_id:who,source_split:s.source_split||item.source_split||"",text_original:text,duration_s:s.duration_s||item.duration_s||"",source_url:s.source_url||item.source_url||"",utterance_translation_fr:s.sentence_translation||"",confidence:"",notes:""};
+    const common={utterance_id:id,annotator_id:who,source_split:s.source_split||item.source_split||"",text_original:text,duration_s:s.duration_s||item.duration_s||"",source_url:s.source_url||item.source_url||"",utterance_translation_fr:s.sentence_translation||"",confidence:"",notes:"",contour_candidate:"",contour_candidate_confidence:"",contour_candidate_voiced_frames:"",contour_review_status:""};
     out.push({...common,row_type:"phrase",unit_id:id,unit_text:text,start_char:0,end_char:text.length,start_s:"",end_s:"",word_translation_fr:"",lexical_tone_final:"",contour_heard:""});
     for(const [j,w] of (s.words||[]).entries())out.push({...common,row_type:"mot",unit_id:`${id}:word:${j+1}`,unit_text:w.text,start_char:w.start_char,end_char:w.end_char,start_s:"",end_s:"",word_translation_fr:w.translation_fr||"",lexical_tone_final:"",contour_heard:""});
-    for(const [j,u] of (s.syllables||[]).entries())out.push({...common,row_type:"syllabe",unit_id:`${id}:syllable:${j+1}`,unit_text:u.unit_text,start_char:u.start_char,end_char:u.end_char,start_s:u.start_s,end_s:u.end_s,word_translation_fr:"",lexical_tone_final:u.lexical_tone_final,contour_heard:u.contour_heard,lexical_tone_note:u.lexical_tone_note||"",contour_note:u.contour_note||"",confidence:u.confidence||""});
+    for(const [j,u] of (s.syllables||[]).entries()){const candidate=proposeContour(item,u);out.push({...common,row_type:"syllabe",unit_id:`${id}:syllable:${j+1}`,unit_text:u.unit_text,start_char:u.start_char,end_char:u.end_char,start_s:u.start_s,end_s:u.end_s,word_translation_fr:"",lexical_tone_final:u.lexical_tone_final,contour_heard:u.contour_heard,contour_candidate:candidate.label,contour_candidate_confidence:candidate.confidence,contour_candidate_voiced_frames:candidate.voiced_frames,contour_review_status:u.contour_heard?"reviewed":"pending",lexical_tone_note:u.lexical_tone_note||"",contour_note:u.contour_note||"",confidence:u.confidence||""});}
   }
   return out;
 }
