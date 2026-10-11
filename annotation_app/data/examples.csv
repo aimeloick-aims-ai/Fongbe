@@ -1,0 +1,9 @@
+utterance_id,text_original,audio_url,duration_s,source_split,source_url
+22302fea2bdbcf20a228b4a256164a3922558c0bd6669036f7e10742a03e306a,ɖɔ̆la tέnwè,,1.950125,train,https://huggingface.co/datasets/Professor/fongbe-speech-zenodo/tree/47dbcd0054659842f53a4cce96b82124bad2d0e3
+3585303905dd127ff6d806eb924415d269ecb26ba5627601eb4e0089131183e8,é hù akwέ cè,,2.403625,train,https://huggingface.co/datasets/Professor/fongbe-speech-zenodo/tree/47dbcd0054659842f53a4cce96b82124bad2d0e3
+3d7ea8cdf02a26e98bf7887e304dfcf5520e11672aed9b0e579a64b302919683,é flí nŭ ɖasí towè,,1.9048125,train,https://huggingface.co/datasets/Professor/fongbe-speech-zenodo/tree/47dbcd0054659842f53a4cce96b82124bad2d0e3
+c7ce8fd55046a651b4207a739e3d075237d01e4f6a88d588fdfda7494c1b7ec5,nùsúnnú ɔ́ hwέn,,1.9965625,train,https://huggingface.co/datasets/Professor/fongbe-speech-zenodo/tree/47dbcd0054659842f53a4cce96b82124bad2d0e3
+84f55306bbceac22a1292eca397e2dbcc52189889793dcdffbcf902173ffde06,yovózέn ɔ́ lăn,,2.0408125,train,https://huggingface.co/datasets/Professor/fongbe-speech-zenodo/tree/47dbcd0054659842f53a4cce96b82124bad2d0e3
+846f4c83bef11fd6285d7f71d00c20cde4531dce3d8706a36e187d90009d0d1b,Yè fón.,,1.86,validation,https://huggingface.co/datasets/Professor/fongbe-speech-zenodo/tree/47dbcd0054659842f53a4cce96b82124bad2d0e3
+c54d1648ba06a2b6c3ecb1c6a4aeb19083604c7c25ad1641f84719bab4a4c145,Ye bǐ yi ge bo ɖɔ.,,1.9,validation,https://huggingface.co/datasets/Professor/fongbe-speech-zenodo/tree/47dbcd0054659842f53a4cce96b82124bad2d0e3
+58fb48edab68b56d2dd744712c3d173fa36428cd586510747c2f5f281f0d36ee,Gɔmɛtɔn gɔ̀n wɛ̀ é ɖè.,,2.38,validation,https://huggingface.co/datasets/Professor/fongbe-speech-zenodo/tree/47dbcd0054659842f53a4cce96b82124bad2d0e3
