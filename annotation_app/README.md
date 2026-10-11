@@ -1,6 +1,6 @@
 # Atelier d’annotation Fongbe
 
-Application statique pour écouter des extraits Fongbe, annoter les traductions, les syllabes, les tons et leurs temps. Les huit exemples sont accompagnés de leur audio et de la courbe F0 calculée avec Praat. Les fichiers audio de ce lot proviennent de `Professor/fongbe-speech-zenodo`, révision `47dbcd0054659842f53a4cce96b82124bad2d0e3` ; sa fiche déclare la licence CC0-1.0. La provenance est indiquée dans l’application.
+Application statique pour écouter des extraits Fongbe, annoter les traductions, les syllabes, les tons et leurs temps. Le lot de démonstration contient huit exemples ; le nombre d’extraits importés n’est pas limité par l’application. Les fichiers audio de démonstration proviennent de `Professor/fongbe-speech-zenodo`, révision `47dbcd0054659842f53a4cce96b82124bad2d0e3` ; sa fiche déclare la licence CC0-1.0. La provenance est indiquée dans l’application.
 
 ## Démarrer sur l’ordinateur
 
@@ -22,9 +22,32 @@ Ouvrir ensuite `http://localhost:8000/annotation_app/`. Un serveur local est né
 
 Les pistes F0 viennent des mesures Praat sauvegardées dans le projet, méthode autocorrélation 50–800 Hz à pas de 10 ms. Les frames non voisées restent sans valeur F0. La courbe est une aide visuelle, pas une annotation de vérité terrain.
 
+## Préparer et charger un lot audio de toute taille
+
+Le script traite toutes les lignes du CSV d’entrée. Il propose des syllabes à partir de la transcription, calcule la piste F0 et suggère des limites temporelles de faible confiance. Ces limites sont des propositions automatiques à vérifier en écoutant.
+
+Créer un CSV UTF-8 avec une ligne par extrait :
+
+```csv
+utterance_id,text_original,audio_path,source_split,speaker_id
+extrait_009,"Transcription Fongbe","audios/extrait_009.wav",local,locuteur_1
+```
+
+Depuis la racine du projet, lancer :
+
+```powershell
+uv run --locked --extra acoustics python scripts/prepare_web_annotation_batch.py --input chemin/vers/mon_lot.csv --output-dir chemin/vers/lot_prepare
+```
+
+Cette commande se lance depuis la racine du projet de recherche local, où se trouve le script. Le dépôt GitHub Pages contient l’application ; une fois le lot préparé, les fichiers produits se chargent sur la page.
+
+Sur le site, charger `lot_prepare/examples.csv`, sélectionner tous les audios du lot (leurs noms, sans extension, doivent correspondre à `utterance_id`), puis charger `lot_prepare/f0_contours.json`. Les enregistrements sélectionnés dans le navigateur ne sont pas envoyés au site. Le fichier `batch_report.json` donne le nombre d’extraits, de syllabes proposées et les échecs éventuels.
+
+La segmentation des unités écrites utilise les noyaux vocaliques de la transcription comme proposition ; elle ne transcrit pas automatiquement un audio brut. Il faut donc fournir le texte Fongbe dans le CSV. Les contours F0 ne remplacent pas l’écoute ni la vérification des tons.
+
 ## Ajouter des exemples
 
-Importer un CSV UTF-8 qui contient au minimum `utterance_id`, `text_original` et `audio_url`. Les syllabes peuvent être fournies sur plusieurs lignes avec les colonnes `syllable_text`, `start_char`, `end_char`, `start_s` et `end_s`. Pour mettre de nouveaux exemples à disposition de tous, ajouter leurs lignes dans `data/examples.csv` et `data/syllables.csv`, placer leurs WAV dans `audio/`, puis publier le changement.
+Importer un CSV UTF-8 qui contient au minimum `utterance_id` et `text_original`. Les syllabes peuvent être fournies sur plusieurs lignes avec les colonnes `syllable_text`, `start_char`, `end_char`, `start_s` et `end_s`. Le choix « Charger plusieurs audios » accepte plusieurs fichiers à la fois et associe un fichier dont le nom correspond à l’identifiant. Pour mettre de nouveaux exemples et audios à disposition de tous, ajouter leurs fichiers au dépôt puis publier le changement.
 
 ## Reproduire les fichiers du lot
 
@@ -34,4 +57,4 @@ Importer un CSV UTF-8 qui contient au minimum `utterance_id`, `text_original` et
 uv run --locked python scripts/build_annotation_app.py
 ```
 
-Le script reprend les limites validées présentes dans le modèle d’alignement, copie les huit WAV correspondants et exporte les courbes F0 issues de `raw_f0_all_praat.parquet`.
+Le script reprend les exemples du lot de démonstration, copie leurs WAV et exporte les courbes F0 issues de `raw_f0_all_praat.parquet`. Pour préparer un autre lot, utiliser `scripts/prepare_web_annotation_batch.py` ci-dessus.

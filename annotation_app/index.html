@@ -32,16 +32,18 @@
         <div class="progress-track"><div id="progress-bar"></div></div>
         <nav id="example-nav" aria-label="Liste des extraits"></nav>
         <div class="side-tools">
-          <label class="button secondary import-button">＋ Charger un CSV d’exemples<input id="import-examples" type="file" accept=".csv,text/csv" hidden></label>
+          <label class="button secondary import-button">＋ Charger un CSV sans limite de lignes<input id="import-examples" type="file" accept=".csv,text/csv" hidden></label>
+          <label class="button secondary import-button">♫ Charger plusieurs audios<input id="import-audio" type="file" accept="audio/*,.wav,.mp3,.flac,.ogg,.m4a" multiple hidden></label>
+          <label class="button text-button import-button">Charger les courbes F0 (JSON)<input id="import-f0" type="file" accept=".json,application/json" hidden></label>
           <button id="export-all" class="button primary" type="button">Télécharger mes annotations</button>
           <label class="button text-button import-button">Reprendre mes annotations CSV<input id="import-annotations" type="file" accept=".csv,text/csv" hidden></label>
-          <p>Le site public ne rassemble pas les réponses automatiquement. Téléchargez votre CSV et transmettez-le au responsable du projet.</p>
+          <p>Chargez autant de lignes et d’audios que nécessaire. Les audios restent dans cet onglet. Associez-les en donnant au fichier le même nom que son <code>utterance_id</code>. Le script de lot prépare syllabes, temps et courbes F0.</p>
         </div>
       </aside>
 
       <section class="annotation-panel">
         <div id="empty-state" class="empty-state" hidden>
-          <div class="empty-icon">♫</div><h2>Aucun exemple chargé</h2><p>Choisissez un CSV qui contient au minimum <code>utterance_id</code>, <code>text_original</code> et <code>audio_url</code>.</p>
+          <div class="empty-icon">♫</div><h2>Aucun exemple chargé</h2><p>Importez un CSV avec <code>utterance_id</code> et <code>text_original</code>, puis sélectionnez les audios correspondants. Vous pouvez aussi annoter les exemples déjà fournis.</p>
         </div>
         <div id="annotation-content" hidden>
           <div class="item-heading">
@@ -53,6 +55,11 @@
             <audio id="audio-player" controls preload="metadata"></audio>
             <div class="player-tip">L’audio de cet extrait est disponible ici. Cliquez sur une syllabe pour l’écouter à 0,75×, depuis 0,15 s avant le début jusqu’à sa limite de fin.</div>
           </div>
+
+          <section class="translation-section">
+            <div class="section-heading"><div><span class="step">00</span><div><h3>Transcription Fongbe</h3><p>Pour un nouvel audio, saisissez la phrase avant de vérifier ses syllabes.</p></div></div><span class="optional-tag">FONGBE</span></div>
+            <textarea id="source-transcription" rows="2" placeholder="Transcription Fongbe…"></textarea>
+          </section>
 
           <section class="translation-section">
             <div class="section-heading"><div><span class="step">01</span><div><h3>Traduction de la phrase</h3><p>Écrivez le sens naturel de toute la phrase en français.</p></div></div><span class="optional-tag">PHRASE</span></div>
