@@ -32,12 +32,9 @@
         <div class="progress-track"><div id="progress-bar"></div></div>
         <nav id="example-nav" aria-label="Liste des extraits"></nav>
         <div class="side-tools">
-          <label class="button secondary import-button">＋ Charger un CSV sans limite de lignes<input id="import-examples" type="file" accept=".csv,text/csv" hidden></label>
-          <label class="button secondary import-button">♫ Charger plusieurs audios<input id="import-audio" type="file" accept="audio/*,.wav,.mp3,.flac,.ogg,.m4a" multiple hidden></label>
-          <label class="button text-button import-button">Charger les courbes F0 (JSON)<input id="import-f0" type="file" accept=".json,application/json" hidden></label>
-          <button id="export-all" class="button primary" type="button">Télécharger mes annotations</button>
-          <label class="button text-button import-button">Reprendre mes annotations CSV<input id="import-annotations" type="file" accept=".csv,text/csv" hidden></label>
-          <p>Chargez autant de lignes et d’audios que nécessaire. Les audios restent dans cet onglet. Associez-les en donnant au fichier le même nom que son <code>utterance_id</code>. Le script de lot prépare syllabes, temps et courbes F0.</p>
+          <a id="export-all" class="button primary" href="#" download="annotations_fongbe.csv">Télécharger mon CSV</a>
+          <p id="dataset-status">Chargement automatique des extraits et audios depuis Hugging Face…</p>
+          <p>Votre travail s’enregistre dans ce navigateur. Le CSV rassemble vos annotations ; téléchargez-le pour le transmettre à l’équipe.</p>
         </div>
       </aside>
 
@@ -83,7 +80,7 @@
             <button id="add-syllable" class="small-action add-syllable" type="button">＋ Ajouter une syllabe</button>
           </section>
 
-          <div class="save-row"><span id="save-status">Modifications enregistrées automatiquement.</span><button id="export-current" class="button primary" type="button">Exporter cet extrait ↓</button></div>
+          <div class="save-row"><span id="save-status">Modifications enregistrées automatiquement.</span></div>
           <details class="source-details"><summary>Provenance de l’extrait</summary><p id="source-note"></p></details>
         </div>
       </section>
@@ -94,3 +91,4 @@
   <script src="app.js"></script>
 </body>
 </html>
+
